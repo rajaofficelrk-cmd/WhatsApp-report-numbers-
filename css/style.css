@@ -1,0 +1,153 @@
+/* ====== Reset ====== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ====== Base ====== */
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* ====== Card ====== */
+.box {
+  width: 100%;
+  max-width: 560px;
+  background: #1c1c28;
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  border: 1px solid #333;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  background: linear-gradient(90deg, #00ff88, #00b7ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 26px;
+}
+
+/* ====== Form ====== */
+label {
+  display: block;
+  font-size: 13px;
+  color: #aaa;
+  margin-bottom: 6px;
+  margin-top: 12px;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: #262633;
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+  transition: 0.2s;
+}
+
+input:focus {
+  border-color: #00ff88;
+  box-shadow: 0 0 8px rgba(0,255,136,0.3);
+}
+
+/* ====== Buttons ====== */
+.row {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  transition: 0.2s;
+  min-width: 130px;
+}
+
+button:hover { transform: translateY(-2px); opacity: 0.9; }
+button:active { transform: scale(0.97); }
+button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+#pasteBtn  { background: #0d6efd; color: #fff; }
+#clearBtn  { background: #6c757d; color: #fff; }
+#startBtn  { background: linear-gradient(90deg, #198754, #00ff88); color: #fff; }
+#stopBtn   { background: linear-gradient(90deg, #dc3545, #ff5555); color: #fff; }
+#resetBtn  { background: #ffc107; color: #000; }
+#exportBtn { background: #6f42c1; color: #fff; }
+
+/* ====== Dashboard Panel ====== */
+#dashboard {
+  margin-top: 22px;
+  padding: 18px;
+  background: #0a0a0f;
+  border-radius: 12px;
+  border: 1px solid #333;
+  font-size: 14px;
+  line-height: 2;
+}
+
+#dashboard p {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dashed #222;
+  padding: 4px 0;
+}
+
+#dashboard p:last-child { border-bottom: none; }
+
+/* ====== Status ====== */
+.live {
+  color: #00ff88;
+  font-weight: bold;
+  animation: pulse 1s infinite;
+}
+
+.stopped { color: #ff5555; font-weight: bold; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+
+/* ====== Log Box ====== */
+#logBox {
+  margin-top: 15px;
+  max-height: 150px;
+  overflow-y: auto;
+  background: #000;
+  border-radius: 10px;
+  padding: 10px;
+  font-family: monospace;
+  font-size: 12px;
+  color: #0f0;
+  border: 1px solid #222;
+}
+
+#logBox div {
+  border-bottom: 1px solid #111;
+  padding: 2px 0;
+  word-break: break-all;
+}
+
+/* ====== Responsive ====== */
+@media (max-width: 480px) {
+  .box { padding: 18px; }
+  h2 { font-size: 22px; }
+  button { font-size: 13px; padding: 10px; }
+  #dashboard { font-size: 13px; }
+}

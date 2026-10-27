@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Live Dashboard Control Panel</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .box {
+    width: 100%;
+    max-width: 560px;
+    background: #1c1c28;
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    border: 1px solid #333;
+  }
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    background: linear-gradient(90deg,#00ff88,#00b7ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 26px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    color: #aaa;
+    margin-bottom: 6px;
+    margin-top: 12px;
+  }
+  input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #444;
+    background: #262633;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+    transition: 0.2s;
+  }
+  input:focus { border-color: #00ff88; box-shadow: 0 0 8px rgba(0,255,136,0.3); }
+  .row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    transition: 0.2s;
+  }
+  button:hover { transform: translateY(-2px); opacity: 0.9; }
+  button:active { transform: scale(0.97); }
+  #pasteBtn { background: #0d6efd; color: #fff; }
+  #clearBtn { background: #6c757d; color: #fff; }
+  #startBtn { background: linear-gradient(90deg,#198754,#00ff88); color: #fff; }
+  #stopBtn { background: linear-gradient(90deg,#dc3545,#ff5555); color: #fff; }
+  #resetBtn { background: #ffc107; color: #000; }
+  #exportBtn { background: #6f42c1; color: #fff; }
+
+  #dashboard {
+    margin-top: 22px;
+    padding: 18px;
+    background: #0a0a0f;
+    border-radius: 12px;
+    border: 1px solid #333;
+    font-size: 14px;
+    line-height: 2;
+  }
+  #dashboard p { display: flex; justify-content: space-between; border-bottom: 1px dashed #222; padding: 4px 0; }
+  #dashboard p:last-child { border-bottom: none; }
+  .live { color: #00ff88; font-weight: bold; animation: pulse 1s infinite; }
+  .stopped { color: #ff5555; font-weight: bold; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+
+  #logBox {
+    margin-top: 15px;
+    max-height: 150px;
+    overflow-y: auto;
+    background: #000;
+    border-radius: 10px;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 12px;
+    color: #0f0;
+    border: 1px solid #222;
+  }
+  #logBox div { border-bottom: 1px solid #111; padding: 2px 0; }
+</style>
+</head>
+<body>
+  <div class="box">
+    <h2>⚡ Live Dashboard</h2>
+
+    <label>Report Number</label>
+    <input type="text" id="reportNumber" placeholder="Report Number paste here..." />
+
+    <label>Target Number</label>
+    <input type="text" id="targetNumber" placeholder="Target Number..." />
+
+    <div class="row">
+      <button id="pasteBtn">📋 Paste Report</button>
+      <button id="clearBtn">🧹 Clear</button>
+    </div>
+
+    <div class="row">
+      <button id="startBtn">▶ Start</button>
+      <button id="stopBtn">🛑 Stop</button>
+    </div>
+
+    <div class="row">
+      <button id="resetBtn">🔄 Reset</button>
+      <button id="exportBtn">💾 Export Log</button>
+    </div>
+
+    <div id="dashboard">
+      <p><span>Status:</span> <span id="status" class="stopped">Stopped</span></p>
+      <p><span>Report No:</span> <span id="showReport">-</span></p>
+      <p><span>Target No:</span> <span id="showTarget">-</span></p>
+      <p><span>Started At:</span> <span id="startTime">-</span></p>
+      <p><span>Live Time:</span> <span id="liveTime">-</span></p>
+      <p><span>Duration:</span> <span id="duration">00:00:00</span></p>
+      <p><span>Counter:</span> <span id="counter">0</span></p>
+    </div>
+
+    <div id="logBox"></div>
+  </div>
+
+<script>
+  // ====== Elements ======
+  const reportInput = document.getElementById("reportNumber");
+  const targetInput = document.getElementById("targetNumber");
+  const statusEl    = document.getElementById("status");
+  const showReport  = document.getElementById("showReport");
+  const showTarget  = document.getElementById("showTarget");
+  const startTimeEl = document.getElementById("startTime");
+  const liveTimeEl  = document.getElementById("liveTime");
+  const durationEl  = document.getElementById("duration");
+  const counterEl   = document.getElementById("counter");
+  const logBox      = document.getElementById("logBox");
+
+  // ====== State ======
+  let timer = null;
+  let count = 0;
+  let startTimestamp = null;
+
+  // ====== Log Function ======
+  function addLog(msg) {
+    const time = new Date().toLocaleTimeString();
+    const div = document.createElement("div");
+    div.textContent = `[${time}] ${msg}`;
+    logBox.prepend(div);
+    if (logBox.children.length > 100) logBox.removeChild(logBox.lastChild);
+  }
+
+  // ====== Paste Button ======
+  document.getElementById("pasteBtn").addEventListener("click", async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text) { alert("Clipboard empty hai."); return; }
+      reportInput.value = text.trim();
+      showReport.textContent = text.trim();
+      addLog("Report number pasted: " + text.trim());
+    } catch (err) {
+      alert("Clipboard read nahi ho paya. Manually paste karo.");
+    }
+  });
+
+  // ====== Clear Button ======
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    reportInput.value = "";
+    targetInput.value = "";
+    addLog("Inputs cleared.");
+  });
+
+  // ====== Start Button ======
+  document.getElementById("startBtn").addEventListener("click", () => {
+    if (timer) { addLog("Already running..."); return; }
+
+    const report = reportInput.value.trim();
+    const target = targetInput.value.trim();
+
+    if (!report || !target) {
+      alert("Report Number aur Target Number dono bharo.");
+      return;
+    }
+    if (!/^\d+$/.test(target)) {
+      alert("Target Number sirf digits me hona chahiye.");
+      return;
+    }
+
+    // Reset counter
+    count = 0;
+    counterEl.textContent = "0";
+    startTimestamp = Date.now();
+
+    showReport.textContent = report;
+    showTarget.textContent = target;
+    startTimeEl.textContent = new Date().toLocaleTimeString();
+    statusEl.textContent = "LIVE";
+    statusEl.className = "live";
+
+    addLog("▶ Started | Report: " + report + " | Target: " + target);
+
+    timer = setInterval(() => {
+      count++;
+      counterEl.textContent = count;
+      liveTimeEl.textContent = new Date().toLocaleTimeString();
+
+      const diff = Math.floor((Date.now() - startTimestamp) / 1000);
+      const hh = String(Math.floor(diff / 3600)).padStart(2, "0");
+      const mm = String(Math.floor((diff % 3600) / 60)).padStart(2, "0");
+      const ss = String(diff % 60).padStart(2, "0");
+      durationEl.textContent = `${hh}:${mm}:${ss}`;
+    }, 1000);
+  });
+
+  // ====== Stop Button ======
+  document.getElementById("stopBtn").addEventListener("click", () => {
+    if (!timer) { addLog("Not running."); return; }
+    clearInterval(timer);
+    timer = null;
+    statusEl.textContent = "STOPPED";
+    statusEl.className = "stopped";
+    addLog("🛑 Stopped | Counter: " + count);
+  });
+
+  // ====== Reset Button ======
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    clearInterval(timer);
+    timer = null;
+    count = 0;
+    startTimestamp = null;
+
+    statusEl.textContent = "Stopped";
+    statusEl.className = "stopped";
+    showReport.textContent = "-";
+    showTarget.textContent = "-";
+    startTimeEl.textContent = "-";
+    liveTimeEl.textContent = "-";
+    durationEl.textContent = "00:00:00";
+    counterEl.textContent = "0";
+    logBox.innerHTML = "";
+    addLog("🔄 Reset done.");
+  });
+
+  // ====== Export Log ======
+  document.getElementById("exportBtn").addEventListener("click", () => {
+    const logs = Array.from(logBox.children).map(d => d.textContent).reverse().join("\n");
+    if (!logs) { alert("Log empty hai."); return; }
+    const blob = new Blob([logs], { type: "text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "live_dashboard_log_" + Date.now() + ".txt";
+    a.click();
+    addLog("💾 Log exported.");
+  });
+
+  // ====== Keyboard Shortcuts ======
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !timer) document.getElementById("startBtn").click();
+    if (e.key === "Escape" && timer) document.getElementById("stopBtn").click();
+  });
+</script>
+</body>
+</html>
